@@ -11,7 +11,8 @@ import (
 )
 
 type Mechanism struct {
-	tokenCredential azcore.TokenCredential
+	tokenCredential     azcore.TokenCredential
+	tokenRequestOptions policy.TokenRequestOptions
 }
 
 func (*Mechanism) Name() string {
@@ -38,9 +39,8 @@ func (m *Mechanism) Start(ctx context.Context) (sasl.StateMachine, []byte, error
 }
 
 func (m *Mechanism) getEntraToken(ctx context.Context, saslMeta *sasl.Metadata) (azcore.AccessToken, error) {
-	tokenRequestOptions := buildTokenRequestOptions(saslMeta)
 
-	entraToken, err := m.tokenCredential.GetToken(ctx, tokenRequestOptions)
+	entraToken, err := m.tokenCredential.GetToken(ctx, m.tokenRequestOptions)
 
 	if err == nil {
 		return entraToken, nil
@@ -51,21 +51,23 @@ func (m *Mechanism) getEntraToken(ctx context.Context, saslMeta *sasl.Metadata) 
 
 }
 
-func buildTokenRequestOptions(saslMeta *sasl.Metadata) policy.TokenRequestOptions {
-	tokenRequestOptions := policy.TokenRequestOptions{
-		Scopes:    []string{"https://" + saslMeta.Host + "/.default"},
-		EnableCAE: false,
-	}
-
-	return tokenRequestOptions
-}
-
 func (m *Mechanism) Next(ctx context.Context, challenge []byte) (done bool, response []byte, err error) {
 	return true, nil, nil
 }
 
-func NewMechanism(tokenCredential azcore.TokenCredential) *Mechanism {
+func NewMechanism(tokenCredential azcore.TokenCredential, options *policy.TokenRequestOptions) *Mechanism {
+	defaultTokenRequestOptions := policy.TokenRequestOptions{
+		Scopes:    []string{"https://graph.microsoft.com/.default"},
+		EnableCAE: false,
+	}
+
+	// If options is nil, use the default options
+	if options == nil {
+		options = &defaultTokenRequestOptions
+	}
+
 	return &Mechanism{
-		tokenCredential: tokenCredential,
+		tokenCredential:     tokenCredential,
+		tokenRequestOptions: *options,
 	}
 }
