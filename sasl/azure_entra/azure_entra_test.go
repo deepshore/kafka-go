@@ -1,4 +1,4 @@
-package azure_event_hubs_entra
+package azure_entra
 
 import (
 	"context"

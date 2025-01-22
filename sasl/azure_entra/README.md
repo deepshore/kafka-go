@@ -1,15 +1,11 @@
 # Azure Event Hubs Entra
 
-Provides support for [Azure Event Hub with Kafka Protocol](https://learn.microsoft.com/en-us/azure/event-hubs/azure-event-hubs-kafka-overview), 
-using Azure Entra for authentication.
+Provides support for ssl sasl mechanism via [Azure Entra](https://www.microsoft.com/en-us/security/business/identity-access/microsoft-entra-id)
 
 ## How to use
-This module is separate from the `kafka-go` module, since it is only required 
-for Event Hub users.
-
 You can add this module to your dependencies by running the command below:
 ```shell
-go get github.com/generalmotors/kafka-go/sasl/azure_event_hubs_entra
+go get github.com/deepshore/kafka-go/sasl/azure_entra
 ```
 
 To connect to Event Hub with Kafka protocol:
@@ -23,8 +19,8 @@ import (
 	"os"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	"github.com/generalmotors/kafka-go"
-	"github.com/generalmotors/kafka-go/sasl/azure_event_hubs_entra"
+	"github.com/deepshore/kafka-go"
+	"github.com/deepshore/kafka-go/sasl/azure_entra"
 )
 
 func main() {
@@ -37,13 +33,13 @@ func main() {
 	}
 
 	// Create Azure Entra SASL Mechanism
-	entraMechanism := azure_event_hubs_entra.NewMechanism(cred)
+	entraMechanism := azure_entra.NewMechanism(cred)
 
 	// Reader
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{"<Event Hub Namespace Name>.servicebus.windows.net:9093"},
+		Brokers: []string{"example.kafka.com:9093"},
 		GroupID: "<Arbitrary Consumer Group Id>",
-		Topic:   "<Event Hub Name>",
+		Topic:   "<Topic>",
 		Dialer: &kafka.Dialer{
 			SASLMechanism: entraMechanism,
 			TLS:           &tls.Config{},
@@ -54,8 +50,8 @@ func main() {
 
 	// Writer
 	w := kafka.NewWriter(kafka.WriterConfig{
-		Brokers: []string{"<Event Hub Namespace Name>.servicebus.windows.net:9093"},
-		Topic:   "<Event Hub Name>",
+		Brokers: []string{"<example.kafka.com:9093"},
+		Topic:   "<Topic>",
 		Dialer: &kafka.Dialer{
 			SASLMechanism: entraMechanism,
 			TLS:           &tls.Config{},
